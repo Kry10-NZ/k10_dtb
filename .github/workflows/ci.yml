@@ -1,0 +1,43 @@
+name: Build, Test and Lint
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  MIX_ENV: test
+
+jobs:
+  tests:
+    name: Tests
+    runs-on: ubuntu-20.04
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          otp-version: 24.2.1
+          elixir-version: 1.13.3
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Check for compilation warnings
+        run: mix compile --force --warnings-as-errors
+
+      - name: Run test suite
+        run: mix test
+
+      - name: Linting (format)
+        run: mix format --check-formatted
+  license:
+      runs-on: ubuntu-latest
+      steps:
+      - uses: actions/checkout@v2
+      - name: REUSE Compliance Check
+        uses: fsfe/reuse-action@v1

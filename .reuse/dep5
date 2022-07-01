@@ -1,0 +1,14 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: DTB
+Upstream-Contact: Kry10 Limited(NZ) <kry10.com>
+Source: https://github.com/Kry10-NZ/k10_dtb/
+
+Files:
+  test/*
+  mix.exs
+  README.md
+  .formatter.exs
+  .gitignore
+  .github/*
+Copyright: Copyright (c) 2022, Kry10 Limited. All rights reserved.
+License: Apache-2.0

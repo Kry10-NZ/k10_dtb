@@ -1,0 +1,18 @@
+/dts-v1/;
+
+// dtc -O dtb -o manifest.dtb manifest.dts
+/ {
+    node1 {
+        child-node1 {
+            string_list = "first string", "second string";
+        };
+        child-node2 {
+        };
+    };
+    node2 {
+        empty-property;
+        child-node1 {
+            uint32-property = <1 2 3 4>;
+        };
+    };
+};
