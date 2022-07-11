@@ -45,7 +45,7 @@ defmodule K10.DTB do
   defmodule Tree do
     @type t :: %Tree{
             header: Header.t(),
-            strings: %{(offset :: non_neg_integer()) => binary()},
+            strings: binary,
             structs: map
           }
     defstruct [:header, :strings, :structs]
@@ -142,8 +142,7 @@ defmodule K10.DTB do
   end
 
   defp process_strings(bin, header) do
-    dt_strings = binary_part(bin, header.off_dt_strings, header.size_dt_strings)
-    strings = extract_strings(dt_strings)
+    strings = binary_part(bin, header.off_dt_strings, header.size_dt_strings)
     {:ok, strings}
   end
 
@@ -166,19 +165,10 @@ defmodule K10.DTB do
     {i, rest}
   end
 
-  defp extract_strings(dt_strings) do
-    # return map of offest -> string
-    extract_strings(dt_strings, 0, %{})
-  end
-
-  defp extract_strings(<<>>, _count, result) do
-    result
-  end
-
-  defp extract_strings(strings, count, result) do
-    {res, rest} = extract_string(strings)
-    result = Map.put_new(result, count, res)
-    extract_strings(rest, count + byte_size(res) + 1, result)
+  defp fetch_string(strings, offset) do
+    <<_head::binary-size(offset), rest::binary>> = strings
+    {string, _} = extract_string(rest)
+    string
   end
 
   defp extract_string(bin) do
@@ -215,7 +205,8 @@ defmodule K10.DTB do
         {:continue, rest, Map.put_new(acc, name, nested)}
 
       {{:fdt_prop, string_offset, data}, rest} ->
-        name = Map.fetch!(strings, string_offset)
+        name = fetch_string(strings, string_offset)
+
         acc = Map.put_new(acc, name, data)
         {:continue, rest, acc}
 

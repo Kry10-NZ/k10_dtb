@@ -4,6 +4,10 @@
 / {
     node1 {
         child-node1 {
+            // max_number must be parsed first so a single string
+            // is stored for max_number and number with different offsets
+            max_number = <100>;
+            number = <1>;
             string_list = "first string", "second string";
         };
         child-node2 {
