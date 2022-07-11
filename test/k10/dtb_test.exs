@@ -12,7 +12,8 @@ defmodule K10.DTBTest do
   describe "parse/1" do
     test "basic parsing" do
       assert {:ok, %Tree{} = tree} = K10.DTB.parse(@blob)
-      assert %K10.DTB.Header{total_size: 287} = tree.header
+      assert %K10.DTB.Header{total_size: 330} = tree.header
+      assert byte_size(tree.strings) == tree.header.size_dt_strings
 
       {:ok, uints} = K10.DTB.get_property(tree, ["node2", "child-node1", "uint32-property"])
       {:ok, strings} = K10.DTB.get_property(tree, ["node1", "child-node1", "string_list"])
