@@ -12,7 +12,7 @@ defmodule K10.DTBTest do
   describe "parse/1" do
     test "basic parsing" do
       assert {:ok, %Tree{} = tree} = K10.DTB.parse(@blob)
-      assert %K10.DTB.Header{total_size: 330} = tree.header
+      assert %K10.DTB.Header{total_size: 365} = tree.header
       assert byte_size(tree.strings) == tree.header.size_dt_strings
 
       {:ok, uints} = K10.DTB.get_property(tree, ["node2", "child-node1", "uint32-property"])
@@ -39,6 +39,23 @@ defmodule K10.DTBTest do
 
       assert K10.DTB.as_uint32s!(uints) == [1, 2, 3, 4]
       assert K10.DTB.as_strings!(strings) == ["first string", "second string"]
+    end
+  end
+
+  describe "find_compatible_nodes/2" do
+    setup do
+      assert {:ok, tree} = K10.DTB.parse(@blob)
+      %{tree: tree}
+    end
+
+    test "search for node that exists", %{tree: tree} do
+      compatible_nodes = K10.DTB.find_compatible_nodes(tree, "test_device")
+      assert compatible_nodes == [["node2", "child-node1"]]
+    end
+
+    test "search for node that does not exist", %{tree: tree} do
+      compatible_nodes = K10.DTB.find_compatible_nodes(tree, "non_existent_device")
+      assert compatible_nodes == []
     end
   end
 end
