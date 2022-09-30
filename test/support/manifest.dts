@@ -16,6 +16,7 @@
     node2 {
         empty-property;
         child-node1 {
+            compatible = "test_device";
             uint32-property = <1 2 3 4>;
         };
     };
