@@ -91,6 +91,38 @@ defmodule K10.DTB do
   end
 
   @doc """
+  Given a "compatibility string", i.e. a string of the same meaning as of
+  the "compatible" property in nodes of a device tree, this function will search
+  for nodes in the tree who have the same string in their "compatible" property.
+  """
+  @spec find_compatible_nodes(Tree.t(), binary) :: [[binary]]
+  def find_compatible_nodes(tree, compatible_string) do
+    Enum.reduce(tree.structs, MapSet.new(), fn {key, value}, acc ->
+      search_compatible_node([], key, value, acc, compatible_string)
+    end)
+    |> MapSet.to_list()
+  end
+
+  defp search_compatible_node(prefix, prop_name, prop_value, compatible_nodes, compatible_string) do
+    cond do
+      prop_name == "compatible" ->
+        if compatible_string in as_strings!(prop_value) do
+          MapSet.put(compatible_nodes, prefix)
+        else
+          compatible_nodes
+        end
+
+      is_map(prop_value) ->
+        Enum.reduce(prop_value, compatible_nodes, fn {key, value}, acc ->
+          search_compatible_node(prefix ++ ["#{prop_name}"], key, value, acc, compatible_string)
+        end)
+
+      true ->
+        compatible_nodes
+    end
+  end
+
+  @doc """
   Extract a list of strings from a property value. Raises an error
   if it fails to extract.
   """
