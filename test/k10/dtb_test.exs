@@ -40,6 +40,15 @@ defmodule K10.DTBTest do
       assert K10.DTB.as_uint32s!(uints) == [1, 2, 3, 4]
       assert K10.DTB.as_strings!(strings) == ["first string", "second string"]
     end
+
+    test "path for a node", %{tree: tree} do
+      assert {:ok,
+              [
+                {"max_number", _},
+                {"number", _},
+                {"string_list", _}
+              ]} = K10.DTB.get_property(tree, ["node1", "child-node1"])
+    end
   end
 
   describe "find_compatible_nodes/2" do

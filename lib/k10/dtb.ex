@@ -79,15 +79,21 @@ defmodule K10.DTB do
   """
   @spec get_property(Tree.t(), [binary] | binary) :: {:ok, any} | {:error, :not_found}
   def get_property(tree, path) when is_list(path) do
-    case get_in(tree.structs, path) do
-      nil -> {:error, :not_found}
-      value -> {:ok, value}
-    end
+    do_get_property(tree.structs, path)
   end
 
   def get_property(tree, path) when is_binary(path) do
     path = String.split(path, "/", trim: true)
     get_property(tree, path)
+  end
+
+  defp do_get_property(data, []), do: {:ok, data}
+
+  defp do_get_property(data, [path | rest]) do
+    case List.keyfind(data, path, 0) do
+      {^path, value} -> do_get_property(value, rest)
+      _ -> {:error, :not_found}
+    end
   end
 
   @doc """
@@ -112,7 +118,7 @@ defmodule K10.DTB do
           compatible_nodes
         end
 
-      is_map(prop_value) ->
+      is_list(prop_value) ->
         Enum.reduce(prop_value, compatible_nodes, fn {key, value}, acc ->
           search_compatible_node(prefix ++ ["#{prop_name}"], key, value, acc, compatible_string)
         end)
@@ -221,7 +227,7 @@ defmodule K10.DTB do
 
   defp extract_structs(bin, strings) do
     # FIXME error handling
-    {<<>>, acc} = extract_structs(bin, strings, %{})
+    {<<>>, acc} = extract_structs(bin, strings, [])
     acc
   end
 
@@ -229,17 +235,17 @@ defmodule K10.DTB do
     case extract_struct(binary) do
       # root case
       {{:fdt_begin_node, ""}, rest} ->
-        {rest, acc} = extract_structs(rest, strings, %{})
+        {rest, acc} = extract_structs(rest, strings, [])
         {:continue, rest, acc}
 
       {{:fdt_begin_node, name}, rest} ->
-        {rest, nested} = extract_structs(rest, strings, %{})
-        {:continue, rest, Map.put_new(acc, name, nested)}
+        {rest, nested} = extract_structs(rest, strings, [])
+        {:continue, rest, List.keystore(acc, name, 0, {name, nested})}
 
       {{:fdt_prop, string_offset, data}, rest} ->
         name = fetch_string(strings, string_offset)
 
-        acc = Map.put_new(acc, name, data)
+        acc = List.keystore(acc, name, 0, {name, data})
         {:continue, rest, acc}
 
       {:fdt_nop, rest} ->
