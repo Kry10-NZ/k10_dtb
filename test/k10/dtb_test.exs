@@ -22,6 +22,16 @@ defmodule K10.DTBTest do
       assert K10.DTB.as_strings!(strings) == ["first string", "second string"]
     end
 
+    test "parsing padding with non-null" do
+      assert {:ok, %Tree{} = tree} =
+               File.read!("test/support/non_null_padding_manifest.dtb")
+               |> K10.DTB.parse()
+
+      {:ok, strings} = K10.DTB.get_property(tree, ["test", "something"])
+
+      assert K10.DTB.as_strings!(strings) == ["other"]
+    end
+
     test "malformed header" do
       assert {:error, :malformed_header} = K10.DTB.parse(@malformed_blob)
     end

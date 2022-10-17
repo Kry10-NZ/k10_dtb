@@ -269,8 +269,7 @@ defmodule K10.DTB do
   defp extract_struct(<<@fdt_begin_node::size(32)-unsigned-integer-big, rest::binary>>) do
     {name, rest} = extract_string(rest, <<>>)
     name_size = byte_size(name) + 1
-    extra = align(name_size, @fdt_byte_alignment) - name_size
-    rest = eat_nulls(rest, extra)
+    rest = align(rest, name_size, @fdt_byte_alignment)
     {{:fdt_begin_node, name}, rest}
   end
 
@@ -280,8 +279,7 @@ defmodule K10.DTB do
        ) do
     <<value::binary-size(len), rest::binary>> = rest
     value_size = byte_size(value)
-    extra = align(value_size, @fdt_byte_alignment) - value_size
-    rest = eat_nulls(rest, extra)
+    rest = align(rest, value_size, @fdt_byte_alignment)
     {{:fdt_prop, nameoff, value}, rest}
   end
 
@@ -297,16 +295,16 @@ defmodule K10.DTB do
     {:fdt_end, <<>>}
   end
 
-  defp eat_nulls(rest, 0) do
-    rest
-  end
-
-  defp eat_nulls(<<0::8, rest::binary>>, cnt) do
-    eat_nulls(rest, cnt - 1)
-  end
-
-  # smallest v >= n such that v is a multiple of k
-  defp align(n, k) do
-    div(n + k - 1, k) * k
+  # Skip the amount of bytes needed to account for `offset`
+  # in multiple of `alignment` bytes.
+  #
+  # Examples:
+  #
+  # offset=12, alignment=4 => Skip 12
+  # offset=27, alignment=4 => Skip 28 bytes as next multiple of 4 after 27
+  # offset=5, alignment=4 => Skip 8 bytes as next multiple of 4 after 5
+  defp align(data, offset, alignment) do
+    extra = div(offset + alignment - 1, alignment) * alignment - offset
+    binary_part(data, extra, byte_size(data) - extra)
   end
 end
