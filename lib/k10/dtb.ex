@@ -46,7 +46,7 @@ defmodule K10.DTB do
     @type t :: %Tree{
             header: Header.t(),
             strings: binary,
-            structs: map
+            structs: list
           }
     defstruct [:header, :strings, :structs]
   end
